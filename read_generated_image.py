@@ -19,7 +19,6 @@ def extract_csv(image_filename, input_folder, output_folder):
     image_chunk_size = 65500
     image_chunk_offset = image_chunk_size * image_number
     image_pixel_chunk = all_pixels_list[image_chunk_offset: image_chunk_offset + image_chunk_size]
-    put_commands = []
     with open('{}/{}.csv'.format(output_folder, image_filename), 'w+') as csv_file:
         for i in xrange(image_chunk_size):
             formatted_rbg = '{},{},{}'.format(
