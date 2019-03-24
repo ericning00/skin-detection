@@ -76,7 +76,7 @@ with open('db_table/image_0.csv', 'w+') as csv_file:
         max_pixel = max(max_pixel, pixels_list[i])
 
         csv_file.write('{} {}\n'.format(formatted_rbg, pixels_list[i]))
-            # put_commands.push({
+        # put_commands.push({
         #     "PutRequest": {
         #         "Item": {
         #             "rbg": formatted_rbg,

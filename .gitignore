@@ -5,3 +5,7 @@ db_table
 completed_images
 
 .DS_Store
+
+*.pyc
+
+golden_map.csv
