@@ -3,6 +3,12 @@ from PIL import Image
 import sys
 import os
 
+def getValidIndices(indices, height, width):
+    return filter(
+        lambda index: index >= 0 and index <= (height * width) - 1,
+        indices
+    )
+
 def getAdjacentPixelIndices(index, radius, height, width):
     indices = []
 
@@ -15,10 +21,37 @@ def getAdjacentPixelIndices(index, radius, height, width):
 
             indices.append(index + (width * rowDiff) + colDiff)
 
-    return filter(
-        lambda index: index >= 0 and index <= (height * width) - 1,
-        indices
-    )
+    return getValidIndices(indices, height, width)
+
+def getHorizontalPixelTuples(index, radius, height, width):
+    leftIndices = []
+    rightIndices = []
+
+    for colDiff in range(-radius, 0):
+        leftIndices.append(index + colDiff)
+
+    for colDiff in range(1, radius + 1):
+        rightIndices.append(index + colDiff)
+
+    return [
+        getValidIndices(leftIndices, height, width),
+        getValidIndices(rightIndices, height, width)
+    ]
+
+def getVerticalPixelTuples(index, radius, height, width):
+    bottomIndices = []
+    topIndices = []
+
+    for rowDiff in range(-radius, 0):
+        bottomIndices.append(index + (width * rowDiff))
+
+    for rowDiff in range(1, radius + 1):
+        topIndices.append(index + (width * rowDiff))
+
+    return [
+        getValidIndices(bottomIndices, height, width),
+        getValidIndices(topIndices, height, width)
+    ]
 
 def processNewSkinMapIteration(
     skinMap,
@@ -26,7 +59,8 @@ def processNewSkinMapIteration(
     threshold_ratio,
     height,
     width,
-    onlyIsSkin = False
+    onlyIsSkin = False,
+    axesCheck = False
 ):
     newSkinPixelMap = []
     for index, isCurrentPixelSkin in enumerate(skinMap):
@@ -34,15 +68,53 @@ def processNewSkinMapIteration(
             newSkinPixelMap.append(isCurrentPixelSkin)
             continue
 
-        adjacentPixels = getAdjacentPixelIndices(index, radius, height, width);
-        skinCount = 0.
-        for adjacentPixelIndex in adjacentPixels:
-            if skinMap[adjacentPixelIndex]:
-                skinCount = skinCount + 1.
+        if axesCheck:
+            if isCurrentPixelSkin is True:
+                newSkinPixelMap.append(isCurrentPixelSkin)
+                continue
 
-        newSkinPixelMap.append(
-            True if (skinCount/len(adjacentPixels)) > threshold_ratio else False
-        )
+            horizontalPixelTuples = getHorizontalPixelTuples(index, 20, height, width)
+            leftCount = 0
+            rightCount = 0
+
+            for pixelIndex in horizontalPixelTuples[0]:
+                if skinMap[pixelIndex]:
+                    leftCount = leftCount + 1
+
+            for pixelIndex in horizontalPixelTuples[1]:
+                if skinMap[pixelIndex]:
+                    rightCount = rightCount + 1
+
+            if leftCount > 0 and rightCount > 0:
+                newSkinPixelMap.append(True)
+            # else:
+            #     newSkinPixelMap.append(False)
+            else:
+                # print width
+                verticalPixelTuples = getVerticalPixelTuples(index, 5, height, width)
+                bottomCount = 0
+                topCount = 0
+
+                for pixelIndex in verticalPixelTuples[0]:
+                    if skinMap[pixelIndex]:
+                        bottomCount = bottomCount + 1
+
+                for pixelIndex in verticalPixelTuples[1]:
+                    if skinMap[pixelIndex]:
+                        topCount = topCount + 1
+
+                newSkinPixelMap.append(True if bottomCount > 0 and topCount > 0 else False)
+
+        else:
+            adjacentPixels = getAdjacentPixelIndices(index, radius, height, width);
+            skinCount = 0.
+            for adjacentPixelIndex in adjacentPixels:
+                if skinMap[adjacentPixelIndex]:
+                    skinCount = skinCount + 1.
+
+            newSkinPixelMap.append(
+                True if (skinCount/len(adjacentPixels)) > threshold_ratio else False
+            )
 
     return newSkinPixelMap
 
@@ -76,13 +148,13 @@ for pixel in pixels:
 outputPicture(image.mode, image.size, skinPixelMap, 'image_0');
 
 # Clean up patches
-for iteration in range(0, 1):
-    skinPixelMap = processNewSkinMapIteration(skinPixelMap, 4, 0.4, height, width, True)
+for iteration in range(0, 2):
+    skinPixelMap = processNewSkinMapIteration(skinPixelMap, 4, 0.2, height, width, True)
     print "Cleanup Iteration {}".format(iteration + 1)
     outputPicture(image.mode, image.size, skinPixelMap, "image_cleanup_{}".format(iteration));
 
 # Fill in patches
-for iteration in range(0, 10):
-    skinPixelMap = processNewSkinMapIteration(skinPixelMap, 1, 0.5, height, width)
+for iteration in range(0, 3):
+    skinPixelMap = processNewSkinMapIteration(skinPixelMap, 1, 0.33, height, width, False, True)
     print "Fill-in Iteration {}".format(iteration + 1)
     outputPicture(image.mode, image.size, skinPixelMap, "image_fillin_{}".format(iteration));
