@@ -87,8 +87,6 @@ def processNewSkinMapIteration(
 
             if leftCount > 0 and rightCount > 0:
                 newSkinPixelMap.append(True)
-            # else:
-            #     newSkinPixelMap.append(False)
             else:
                 # print width
                 verticalPixelTuples = getVerticalPixelTuples(index, 5, height, width)
