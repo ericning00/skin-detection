@@ -16,3 +16,6 @@ or updated to remote NoSQL table
 
 - `Rscript Test_Pascal_Skin.R` where `Test_Pascal_Skin.R` is modified to
 where the input images and output scoremaps need to be
+
+
+test change
